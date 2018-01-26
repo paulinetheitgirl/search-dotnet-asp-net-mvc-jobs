@@ -96,10 +96,11 @@
     var lon = -73.992511;
     var pinLayer, infoboxLayer;
     var pinInfobox = null;
-    var infoboxLayer = new Microsoft.Maps.EntityCollection();
-    var pinLayer = new Microsoft.Maps.EntityCollection();
+    var infoboxLayer = null;
+    var pinLayer = null;
 
-    $(function () {
+    // https://alastaira.wordpress.com/2011/05/06/getting-errors-with-the-new-version-of-the-bing-maps-v7-control-update/
+    $(window).load(function () {
         // Load the initial data
         currentPage = 1;
         businessTitleFacet = '';
@@ -107,7 +108,8 @@
         salaryRangeFacet = '';
         document.getElementById("q").focus();
         sortType = 'featured';
-
+        infoboxLayer = new Microsoft.Maps.EntityCollection();
+        pinLayer = new Microsoft.Maps.EntityCollection();
         map = new Microsoft.Maps.Map(document.getElementById("jobs-page-map"),
             {
                 credentials: "Ag6emoVznJlat4hHnw7nrYGDlQ43ZjXAY7e-8R4bu8ZC7K1d8ORGhZMBkVu3KAVq",
