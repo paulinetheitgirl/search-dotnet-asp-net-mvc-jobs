@@ -1,0 +1,317 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Search - ReactJS + Web API version</title>
+    <base href="/">
+    <!-- Stylesheets -->
+    <link href='http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Condensed:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="content/bootstrap.css">
+    <link rel="stylesheet" href="content/font-awesome.min.css">
+    <link rel="stylesheet" href="content/flexslider.css">
+    <link rel="stylesheet" href="content/style.css">
+    <link rel="stylesheet" href="content/responsive.css">
+
+    <!-- Attach CSS for Joyride which is the step through tutorial tool -->
+    <link href="Content/joyride-2.1.css" rel="stylesheet" />
+    <script src="Scripts/jquery.joyride-2.1.js"></script>
+    <!-- Attach CSS for step through tutorial tool -->
+    <script src="Scripts/bootstrap-tour-standalone.min.js"></script>
+    <link href="Content/bootstrap-tour-standalone.min.css" rel="stylesheet" />
+
+    <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?callback=GetMap' async defer></script>
+</head>
+<body>
+    <div id="root" class="container">            
+    </div> <!-- end .row -->
+
+    <script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+    <!-- https://medium.com/@to_pe/how-to-add-react-to-a-simple-html-file-a11511c0235f -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.21.1/babel.min.js"></script>
+    <script type="text/babel">
+        class SearchTermForm extends React.Component {
+            constructor(props) {
+                super(props);
+
+                this.handleChangeSearchTerm = this.handleChangeSearchTerm.bind(this);
+                this.handleChangeZipCode = this.handleChangeZipCode.bind(this);
+                this.handleChangeMaxDistance = this.handleChangeMaxDistance.bind(this);
+                this.handleSubmit = this.handleSubmit.bind(this);
+            }
+
+            handleChangeSearchTerm(event) {
+                //this.setState({value: event.target.value});
+                this.props.handleChangedSearch({ searchTerm:event.target.value });
+            }
+
+            handleChangeZipCode(event) {
+                this.props.handleChangedSearch({ zipCode: event.target.value }, true);
+            }
+
+            handleChangeMaxDistance(event) {
+                this.props.handleChangedSearch({ maxDistanceKm: event.target.value });
+            }
+
+            handleSubmit(event) {
+                event.preventDefault();
+                this.props.doSearch();
+            }
+
+            render() {
+                const searchConditions = this.props.searchConditions;
+                return (
+                    <form onSubmit={this.handleSubmit}>
+                        <div className="widget-content clearfix">
+                            <div id="remote">
+                                <input value={searchConditions.searchTerm} onChange={this.handleChangeSearchTerm} className="form-control walkthrough-1" type="text" id="q" placeholder="Search Jobs" />
+                                <select className="form-control pull-left walkthrough-2" id="cmbDistance" onChange={this.handleChangeMaxDistance} value={searchConditions.maxDistance}>
+                                    <option value="0">Any distance from</option>
+                                    <option value="1">Within 1 KM of</option>
+                                    <option value="5">Within 5 KM of</option>
+                                    <option value="20">Within 20 KM of</option>
+                                    <option value="50">Within 50 KM of</option>
+                                </select>
+                                <input type="text" id="zipCode" className="form-control pull-left" value={searchConditions.zipCode} placeholder="ZIP" onChange={this.handleChangeZipCode}/>
+                                <input type="submit" className="search-submit" value=" " onClick={this.handleSubmit} />
+                            </div>
+                        </div>
+                    </form>
+                );
+            }
+        }
+
+        class JobsMap extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    // Load the initial data
+                    currentPage: 1,
+                    businessTitleFacet: '',
+                    postingTypeFacet: '',
+                    salaryRangeFacet: '',
+                    sortType: 'featured'
+                }
+            }
+
+            render() {
+                this.setState({
+                    infoboxLayer: new Microsoft.Maps.EntityCollection(),
+                    pinLayer: new Microsoft.Maps.EntityCollection()
+                    }),
+                this.map = new Microsoft.Maps.Map(document.getElementById("jobs-page-map"), 
+                    {
+                    credentials: "Ag6emoVznJlat4hHnw7nrYGDlQ43ZjXAY7e-8R4bu8ZC7K1d8ORGhZMBkVu3KAVq",
+                    center: new Microsoft.Maps.Location(40.736224, -73.992511),
+                    zoom: 12
+                    });
+            }
+        }
+
+        class Pager extends React.Component {
+            constructor(props) {
+                super(props);
+                this.handleChangePage = this.handleChangePage.bind(this);
+            }
+
+            handleChangePage(event, i) {
+                event.preventDefault();
+                this.props.handleChangedSearch({ currentPage: i }, true);
+            }
+
+            render() {
+                const totalJobs = this.props.totalJobs;
+                const currentPage = this.props.currentPage;               
+                let pagerItems = [];
+                if(totalJobs > 0)
+                {
+                    let totalPages = Math.round(totalJobs / 10);
+                    console.log(currentPage, totalPages);
+                    let showPageFrom = Math.max(currentPage - 2, 1);
+                    let showPageTo = Math.min(showPageFrom + 5, totalPages); 
+                    for(let i=showPageFrom; i < showPageTo; i++)
+                    {
+                        pagerItems.push(<li><a href="#" onClick={(event) => {this.handleChangePage(event, i)}}>{i}</a></li>);
+                    }
+                }
+                return(
+                    <ul id="pagination" className="pagination pull-right">
+                        {pagerItems}
+                    </ul>
+                )
+            }
+        }
+
+        class SearchResultList extends React.Component {
+            constructor(props) {
+                super(props);
+            }
+            render() {
+                const pageOfResults = this.props.pageOfResults;
+                return(
+                    <div id="job_details_div">
+                        {
+                        pageOfResults.map((item) => (
+                        <SearchResultItem value={item.document}></SearchResultItem>
+                        ))
+                        }
+                    </div>
+                )                
+            }
+        }
+
+        class SearchResultItem extends React.Component {            
+            constructor(props) {
+                super(props);
+            }
+            render() {
+                let monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                let date = new Date(this.props.value.posting_date);
+                return(
+                    <div className="jobs-item with-thumb">
+                        <div className="thumb"><img src="/images/content/bus-01.png" alt=""/></div>
+                        <div className="clearfix visible-xs"></div>
+                        <div className="date">{date.getDay()} <span>{monthNames[date.getMonth()]}</span></div>
+                        <h6 className="title"><a href={"/home/jobdetails?id=" + this.props.value.id}>{this.props.value.business_title}</a>&nbsp;
+                        {this.props.value.tags.length ? "- Featured Job" : "" }</h6>
+                        <span className="meta">{this.props.value.work_location}</span>
+                        <p className="description"><b>Salary:</b> ${this.props.value.salary_range_from.toLocaleString()} 
+                        {
+                            this.props.value.salary_range_to > this.props.value.salary_range_from ?
+                            " to $"+ this.props.value.salary_range_to.toLocaleString() :
+                            ""
+                        } 
+                        &nbsp;{this.props.value.salary_frequency}</p>
+                        <p class="description">{this.props.value.job_description.substring(0,500)}&nbsp;&nbsp;&nbsp;<a href={"/home/jobdetails?id=" + this.props.value.id} class="read-more">Read More</a></p>
+                    </div>
+                )                
+            }
+        }
+
+            class SearchApp extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                searchConditions: {
+                    searchTerm: '',
+                    maxDistanceKm: 0,
+                    zipCode: 10001,
+                    currentPage: 1
+                },
+                searchResultObject: {
+                    results: []
+                }
+            };
+
+            this.handleChangedSearch = this.handleChangedSearch.bind(this);
+            this.doSearch = this.doSearch.bind(this);
+            }
+
+            componentDidMount() {
+                this.doSearch();
+                new JobsMap().render();
+            }
+
+            handleChangedSearch(updateObject, runSearch) {
+                var updatedSearchConditions = Object.assign({}, this.state.searchConditions, updateObject);                
+                
+                if(runSearch) {
+                    // this callback guarantees that the state is updated before the function get called
+                    this.setState({ searchConditions:updatedSearchConditions }, () => this.doSearch());
+                }
+                else
+                {
+                    this.setState({ searchConditions:updatedSearchConditions });
+                }
+                 console.log(this.state);
+            }
+
+            doSearch() {
+                var postData = JSON.stringify(this.state.searchConditions);
+                var app = this;
+
+                fetch("api/search",
+                {
+                    headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                    },
+                    method: "POST",
+                    body: postData
+                })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (result) {
+                    console.log(result);
+                    app.setState({searchResultObject: result});
+                })
+                .catch(function(res){ console.log(res) })
+            }
+
+            render() {
+            return (
+            <div className="row">
+                <div className="col-sm-4 page-sidebar">
+                    <aside>
+                        <div className="sidebar-container">
+                            <div className="widget sidebar-widget jobs-search-widget">
+                                <h5 className="widget-title" id="title">Search</h5>
+                                <SearchTermForm searchConditions={this.state.searchConditions}
+                                                handleChangedSearch={this.handleChangedSearch}
+                                                doSearch={this.doSearch}>
+                                </SearchTermForm>
+                            </div>
+                            <div className="widget sidebar-widget jobs-filter-widget">
+                                <h5 className="widget-title">Filter Results</h5>
+                                <p id="filterReset"></p>
+                                <div className="widget-content">
+                                    <h6 id="businessTitleFacetTitle">Business Title</h6>
+                                    <ul className="filter-list" id="business_title_facets"></ul>
+                                    <h6>Location</h6>
+                                    <ul className="filter-list" id="posting_type_facets"></ul>
+                                    <h6>Posting Type</h6>
+                                    <ul className="filter-list" id="posting_type_facets"></ul>
+                                    <h6>Minimum Salary</h6>
+                                    <ul className="filter-list" id="salary_range_facets"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                </div> {/*end .page-sidebar */}
+                <div className="col-sm-8 page-content">
+                    <div id="jobs-page-map" style={{position:'relative',width:750 + 'px',height:350 + 'px'}}>
+                    </div>
+                    <h3><span className="jobs-count" id="jobs-count">{this.state.searchResultObject.count}</span> Available Jobs</h3>
+                    <div className="clearfix">
+                        <select className="form-control pull-left" id="cmbSortType" onchange="setSortType();">
+                            <option value="featured">Relevance</option>
+                            <option value="salaryDesc">Salary (High to Low)</option>
+                            <option value="salaryIncr">Salary (Low to High)</option>
+                            <option value="mostRecent">Most Recently Added</option>
+                        </select>
+                        <Pager handleChangedSearch={this.handleChangedSearch} totalJobs={this.state.searchResultObject.count} currentPage={this.state.searchConditions.currentPage}></Pager>
+                    </div>
+                    <SearchResultList pageOfResults={this.state.searchResultObject.results}></SearchResultList>
+                    <div className="clearfix">
+                        <Pager handleChangedSearch={this.handleChangedSearch} totalJobs={this.state.searchResultObject.count} currentPage={this.state.searchConditions.currentPage}></Pager>
+                    </div>
+                </div> {/* end .page-content */}
+            </div> //end .container
+            );
+            }
+            }
+
+            // ========================================
+
+        function GetMap()
+        {
+            ReactDOM.render(
+                <SearchApp />,
+                document.getElementById('root')
+            );
+        }            
+</script>
+</body>
+</html>

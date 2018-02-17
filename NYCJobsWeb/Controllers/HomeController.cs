@@ -20,6 +20,12 @@ namespace NYCJobsWeb.Controllers
             return View();
         }
 
+        [Route("react")]
+        public ActionResult React()
+        {
+            return File(Server.MapPath("~/ReactJS") + "/index.html", "text/html");
+        }
+
         public ActionResult JobDetails()
         {
             return View();

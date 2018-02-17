@@ -49,7 +49,7 @@ namespace NYCJobsWeb
                 {
                     SearchMode = SearchMode.Any,
                     Top = 10,
-                    Skip = currentPage - 1,
+                    Skip = (currentPage - 1) * 10,
                     // Limit results
                     Select = new List<String>() {"id", "agency", "posting_type", "num_of_positions", "business_title", 
                         "salary_range_from", "salary_range_to", "salary_frequency", "work_location", "job_description",
@@ -81,16 +81,16 @@ namespace NYCJobsWeb
 
                 // Add filtering
                 string filter = null;
-                if (businessTitleFacet != "")
+                if (!string.IsNullOrEmpty(businessTitleFacet))
                     filter = "business_title eq '" + businessTitleFacet + "'";
-                if (postingTypeFacet != "")
+                if (!string.IsNullOrEmpty(postingTypeFacet))
                 {
                     if (filter != null)
                         filter += " and ";
                     filter += "posting_type eq '" + postingTypeFacet + "'";
 
                 }
-                if (salaryRangeFacet != "")
+                if (!string.IsNullOrEmpty(salaryRangeFacet))
                 {
                     if (filter != null)
                         filter += " and ";
