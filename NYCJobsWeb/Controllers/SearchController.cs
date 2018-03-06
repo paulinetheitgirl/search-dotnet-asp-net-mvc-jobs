@@ -55,7 +55,7 @@ namespace NYCJobsWeb.Controllers
                 input.BusinessTitleFacet,
                 input.PostingTypeFacet,
                 input.SalaryRangeFacet,
-                null,
+                input.SortType,
                 input.Latitude,
                 input.Longitude,
                 input.CurrentPage,

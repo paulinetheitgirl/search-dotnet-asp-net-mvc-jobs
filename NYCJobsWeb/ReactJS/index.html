@@ -154,6 +154,30 @@
             }
         }
 
+        class SearchSort extends React.Component {
+            constructor(props) {
+                super(props);
+
+                this.handleChangeSortBy = this.handleChangeSortBy.bind(this);
+            }
+
+            handleChangeSortBy(event) {
+                this.props.handleChangedSearch({ sortType: event.target.value }, true);
+            }
+
+            render() {
+                const searchConditions = this.props.searchConditions;
+                return (
+                    <select className="form-control pull-left" id="cmbSortType" onChange={this.handleChangeSortBy} value={searchConditions.sortType}>
+                        <option value="featured">Relevance</option>
+                        <option value="salaryDesc">Salary (High to Low)</option>
+                        <option value="salaryIncr">Salary (Low to High)</option>
+                        <option value="mostRecent">Most Recently Added</option>
+                    </select>
+                );
+            }
+        }
+
         class Pager extends React.Component {
             constructor(props) {
                 super(props);
@@ -237,28 +261,29 @@
             }
         }
 
-            class SearchApp extends React.Component {
+        class SearchApp extends React.Component {
             constructor(props) {
                 super(props);
                 this.state = {
-                searchConditions: {
-                    searchTerm: '',
-                    maxDistanceKm: 0,
-                    zipCode: 10001,
-                    currentPage: 1
-                },
-                searchResultObject: {
-                    results: [],
-                    facets: {
-                        business_title: [],
-                        posting_type: [],
-                        salary_range_from: []
+                    searchConditions: {
+                        searchTerm: '',
+                        maxDistanceKm: 0,
+                        zipCode: 10001,
+                        currentPage: 1,
+                        sortType: 'featured'
+                    },
+                    searchResultObject: {
+                        results: [],
+                        facets: {
+                            business_title: [],
+                            posting_type: [],
+                            salary_range_from: []
+                        }
                     }
                 }
-            };
 
-            this.handleChangedSearch = this.handleChangedSearch.bind(this);
-            this.doSearch = this.doSearch.bind(this);
+                this.handleChangedSearch = this.handleChangedSearch.bind(this);
+                this.doSearch = this.doSearch.bind(this);
             }
 
             componentDidMount() {
@@ -336,13 +361,8 @@
                         <div id="jobs-page-map" style={{position:'relative',width:750 + 'px',height:350 + 'px'}}>
                         </div>
                         <h3><span className="jobs-count" id="jobs-count">{this.state.searchResultObject.count}</span> Available Jobs</h3>
-                        <div className="clearfix">
-                            <select className="form-control pull-left" id="cmbSortType" onchange="setSortType();">
-                                <option value="featured">Relevance</option>
-                                <option value="salaryDesc">Salary (High to Low)</option>
-                                <option value="salaryIncr">Salary (Low to High)</option>
-                                <option value="mostRecent">Most Recently Added</option>
-                            </select>
+                        <div className="clearfix">                            
+                            <SearchSort searchConditions={this.state.searchConditions} handleChangedSearch={this.handleChangedSearch}></SearchSort>
                             <Pager handleChangedSearch={this.handleChangedSearch} totalJobs={this.state.searchResultObject.count} currentPage={this.state.searchConditions.currentPage}></Pager>
                         </div>
                         <SearchResultList pageOfResults={this.state.searchResultObject.results}></SearchResultList>

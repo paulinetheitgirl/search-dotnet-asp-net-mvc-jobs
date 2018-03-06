@@ -16,6 +16,7 @@ namespace NYCJobsWeb.Models
         public string BusinessTitleFacet { get; set; }
         public string PostingTypeFacet { get; set; }
         public string SalaryRangeFacet { get; set; }
+        public string SortType { get; set; }
 
         public SearchInput()
         {
