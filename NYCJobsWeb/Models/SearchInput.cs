@@ -13,6 +13,9 @@ namespace NYCJobsWeb.Models
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public int CurrentPage { get; set; }
+        public string BusinessTitleFacet { get; set; }
+        public string PostingTypeFacet { get; set; }
+        public string SalaryRangeFacet { get; set; }
 
         public SearchInput()
         {

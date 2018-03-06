@@ -42,7 +42,6 @@
             }
 
             handleChangeSearchTerm(event) {
-                //this.setState({value: event.target.value});
                 this.props.handleChangedSearch({ searchTerm:event.target.value });
             }
 
@@ -79,6 +78,52 @@
                         </div>
                     </form>
                 );
+            }
+        }
+
+        class SearchFacet extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {};
+                this.handleFacetedSearch = this.handleFacetedSearch.bind(this);
+            }
+
+            handleFacetedSearch(event, facetString) {
+                event.preventDefault();
+                let facetData = {};
+                facetData[this.props.facetPropName] = facetString; // dynamically-named property
+                this.props.handleChangedSearch(facetData, true);
+            }
+
+            render() {
+                const facetItems = this.props.facetItems;        
+                if(this.props.facetPropName != "salaryRangeFacet")
+                {
+                    return (
+                    <ul className="filter-list" id={this.props.facetId}>
+                        {
+                        facetItems.map((item) => (
+                        <li><a href="javascript:void(0)" onClick={(event) => {this.handleFacetedSearch(event, item.value)}}>{item.value} ({item.count})</a></li>
+                        ))
+                        }
+                    </ul>
+                    )
+                }
+                else
+                {
+                    
+                    return (
+                        <ul className="filter-list" id={this.props.facetId}>
+                            {
+                                facetItems.map((item) => {
+                                        var lowRange = parseInt(item.value);
+                                        var highRange = lowRange + 49999;
+                                        return  <li><a href="javascript:void(0)" onClick={(event) => {this.handleFacetedSearch(event, item.value)}}>${lowRange.toLocaleString()} - ${highRange.toLocaleString()} ({item.count})</a></li>
+                                    })
+                            }
+                        </ul>
+                    )
+                }
             }
         }
 
@@ -127,9 +172,8 @@
                 if(totalJobs > 0)
                 {
                     let totalPages = Math.round(totalJobs / 10);
-                    console.log(currentPage, totalPages);
                     let showPageFrom = currentPage < 3 ? 1 : currentPage - 2;
-                    let showPageTo = Math.min(showPageFrom + 5, totalPages); 
+                    let showPageTo = Math.min(showPageFrom + 5, totalPages + 1); 
                     let previousPage = Math.max(currentPage - 1, 1);
                     let nextPage = Math.min(currentPage + 1, totalPages);
                     pagerItems.push(<li><a href="#" className="fa fa-angle-left" onClick={(event) => {this.handleChangePage(event, previousPage)}}></a></li>);
@@ -204,7 +248,12 @@
                     currentPage: 1
                 },
                 searchResultObject: {
-                    results: []
+                    results: [],
+                    facets: {
+                        business_title: [],
+                        posting_type: [],
+                        salary_range_from: []
+                    }
                 }
             };
 
@@ -254,58 +303,57 @@
                 .catch(function(res){ console.log(res) })
             }
 
-            render() {
+        render() {
             return (
-            <div className="row">
-                <div className="col-sm-4 page-sidebar">
-                    <aside>
-                        <div className="sidebar-container">
-                            <div className="widget sidebar-widget jobs-search-widget">
-                                <h5 className="widget-title" id="title">Search</h5>
-                                <SearchTermForm searchConditions={this.state.searchConditions}
-                                                handleChangedSearch={this.handleChangedSearch}
-                                                doSearch={this.doSearch}>
-                                </SearchTermForm>
-                            </div>
-                            <div className="widget sidebar-widget jobs-filter-widget">
-                                <h5 className="widget-title">Filter Results</h5>
-                                <p id="filterReset"></p>
-                                <div className="widget-content">
-                                    <h6 id="businessTitleFacetTitle">Business Title</h6>
-                                    <ul className="filter-list" id="business_title_facets"></ul>
-                                    <h6>Location</h6>
-                                    <ul className="filter-list" id="posting_type_facets"></ul>
-                                    <h6>Posting Type</h6>
-                                    <ul className="filter-list" id="posting_type_facets"></ul>
-                                    <h6>Minimum Salary</h6>
-                                    <ul className="filter-list" id="salary_range_facets"></ul>
+                <div className="row">
+                    <div className="col-sm-4 page-sidebar">
+                        <aside>
+                            <div className="sidebar-container">
+                                <div className="widget sidebar-widget jobs-search-widget">
+                                    <h5 className="widget-title" id="title">Search</h5>
+                                    <SearchTermForm searchConditions={this.state.searchConditions}
+                                                    handleChangedSearch={this.handleChangedSearch}
+                                                    doSearch={this.doSearch}>
+                                    </SearchTermForm>
+                                </div>
+                                <div className="widget sidebar-widget jobs-filter-widget">
+                                    <h5 className="widget-title">Filter Results</h5>
+                                    <p id="filterReset"></p>
+                                    <div className="widget-content">
+                                        <h6 id="businessTitleFacetTitle">Business Title</h6>                                    
+                                        <SearchFacet facetId="business_title_facets" facetPropName="businessTitleFacet" handleChangedSearch={this.handleChangedSearch} facetItems={this.state.searchResultObject.facets.business_title}></SearchFacet>
+                                        <h6>Posting Type</h6>
+                                        <SearchFacet facetId="posting_type_facets" facetPropName="postingTypeFacet" handleChangedSearch={this.handleChangedSearch} facetItems={this.state.searchResultObject.facets.posting_type}></SearchFacet>
+                                        <h6>Minimum Salary</h6>
+                                        <ul className="filter-list" id="salary_range_facets"></ul>
+                                        <SearchFacet facetId="salary_range_facets" facetPropName="salaryRangeFacet" handleChangedSearch={this.handleChangedSearch} facetItems={this.state.searchResultObject.facets.salary_range_from}></SearchFacet>
+                                    </div>
                                 </div>
                             </div>
+                        </aside>
+                    </div> {/*end .page-sidebar */}
+                    <div className="col-sm-8 page-content">
+                        <div id="jobs-page-map" style={{position:'relative',width:750 + 'px',height:350 + 'px'}}>
                         </div>
-                    </aside>
-                </div> {/*end .page-sidebar */}
-                <div className="col-sm-8 page-content">
-                    <div id="jobs-page-map" style={{position:'relative',width:750 + 'px',height:350 + 'px'}}>
-                    </div>
-                    <h3><span className="jobs-count" id="jobs-count">{this.state.searchResultObject.count}</span> Available Jobs</h3>
-                    <div className="clearfix">
-                        <select className="form-control pull-left" id="cmbSortType" onchange="setSortType();">
-                            <option value="featured">Relevance</option>
-                            <option value="salaryDesc">Salary (High to Low)</option>
-                            <option value="salaryIncr">Salary (Low to High)</option>
-                            <option value="mostRecent">Most Recently Added</option>
-                        </select>
-                        <Pager handleChangedSearch={this.handleChangedSearch} totalJobs={this.state.searchResultObject.count} currentPage={this.state.searchConditions.currentPage}></Pager>
-                    </div>
-                    <SearchResultList pageOfResults={this.state.searchResultObject.results}></SearchResultList>
-                    <div className="clearfix">
-                        <Pager handleChangedSearch={this.handleChangedSearch} totalJobs={this.state.searchResultObject.count} currentPage={this.state.searchConditions.currentPage}></Pager>
-                    </div>
-                </div> {/* end .page-content */}
-            </div> //end .container
-            );
+                        <h3><span className="jobs-count" id="jobs-count">{this.state.searchResultObject.count}</span> Available Jobs</h3>
+                        <div className="clearfix">
+                            <select className="form-control pull-left" id="cmbSortType" onchange="setSortType();">
+                                <option value="featured">Relevance</option>
+                                <option value="salaryDesc">Salary (High to Low)</option>
+                                <option value="salaryIncr">Salary (Low to High)</option>
+                                <option value="mostRecent">Most Recently Added</option>
+                            </select>
+                            <Pager handleChangedSearch={this.handleChangedSearch} totalJobs={this.state.searchResultObject.count} currentPage={this.state.searchConditions.currentPage}></Pager>
+                        </div>
+                        <SearchResultList pageOfResults={this.state.searchResultObject.results}></SearchResultList>
+                        <div className="clearfix">
+                            <Pager handleChangedSearch={this.handleChangedSearch} totalJobs={this.state.searchResultObject.count} currentPage={this.state.searchConditions.currentPage}></Pager>
+                        </div>
+                    </div> {/* end .page-content */}
+                </div> //end .container
+                );
             }
-            }
+        }
 
             // ========================================
 

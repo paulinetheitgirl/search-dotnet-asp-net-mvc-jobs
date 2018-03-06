@@ -52,9 +52,9 @@ namespace NYCJobsWeb.Controllers
             }
 
             var searchResponse = this._searchService.Search(input.SearchTerm,
-                null,
-                null,
-                null,
+                input.BusinessTitleFacet,
+                input.PostingTypeFacet,
+                input.SalaryRangeFacet,
                 null,
                 input.Latitude,
                 input.Longitude,
