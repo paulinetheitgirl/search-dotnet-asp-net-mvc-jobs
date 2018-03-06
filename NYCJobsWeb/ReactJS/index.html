@@ -128,12 +128,16 @@
                 {
                     let totalPages = Math.round(totalJobs / 10);
                     console.log(currentPage, totalPages);
-                    let showPageFrom = Math.max(currentPage - 2, 1);
+                    let showPageFrom = currentPage < 3 ? 1 : currentPage - 2;
                     let showPageTo = Math.min(showPageFrom + 5, totalPages); 
+                    let previousPage = Math.max(currentPage - 1, 1);
+                    let nextPage = Math.min(currentPage + 1, totalPages);
+                    pagerItems.push(<li><a href="#" className="fa fa-angle-left" onClick={(event) => {this.handleChangePage(event, previousPage)}}></a></li>);
                     for(let i=showPageFrom; i < showPageTo; i++)
                     {
                         pagerItems.push(<li><a href="#" onClick={(event) => {this.handleChangePage(event, i)}}>{i}</a></li>);
                     }
+                    pagerItems.push(<li><a href="#" className="fa fa-angle-left" onClick={(event) => {this.handleChangePage(event, nextPage)}} className="fa fa-angle-right"></a></li>);
                 }
                 return(
                     <ul id="pagination" className="pagination pull-right">
@@ -217,7 +221,7 @@
                 var updatedSearchConditions = Object.assign({}, this.state.searchConditions, updateObject);                
                 
                 if(runSearch) {
-                    // this callback guarantees that the state is updated before the function get called
+                    // this callback guarantees that the state is updated before the function gets called
                     this.setState({ searchConditions:updatedSearchConditions }, () => this.doSearch());
                 }
                 else
