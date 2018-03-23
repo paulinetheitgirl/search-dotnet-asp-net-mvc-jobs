@@ -167,7 +167,9 @@
     <Content Include="Images\search.png" />
     <Content Include="Images\title-bg.png" />
     <Content Include="Images\transparent.png" />
+    <Content Include="ReactJS\bundle.js" />
     <Content Include="ReactJS\index.html" />
+    <Content Include="ReactJS\searchApp.js" />
     <Content Include="Scripts\bootstrap-tour-standalone.min.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
