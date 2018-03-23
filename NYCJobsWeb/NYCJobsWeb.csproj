@@ -170,6 +170,7 @@
     <Content Include="ReactJS\bundle.js" />
     <Content Include="ReactJS\index.html" />
     <Content Include="ReactJS\searchApp.js" />
+    <Content Include="ReactJS\searchApp.jsx" />
     <Content Include="Scripts\bootstrap-tour-standalone.min.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
